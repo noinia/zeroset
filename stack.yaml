@@ -1,5 +1,6 @@
 flags:
 packages:
+- '.'
 - '../hgeometry/hgeometry'
 - '../hgeometry/hgeometry-combinatorial'
 - '../hgeometry/hgeometry-ipe'

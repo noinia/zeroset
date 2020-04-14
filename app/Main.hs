@@ -1,5 +1,8 @@
 module Main where
 
+import ZeroSet.Main(mainWith, options)
+import Options.Applicative
+
+
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = execParser options >>= mainWith
