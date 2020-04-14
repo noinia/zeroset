@@ -1,0 +1,12 @@
+flags:
+packages:
+- '../hgeometry/hgeometry'
+- '../hgeometry/hgeometry-combinatorial'
+- '../hgeometry/hgeometry-ipe'
+extra-deps:
+build:
+  # library-profiling: true
+  # executable-profiling: true
+extra-lib-dirs:
+- /usr/lib
+resolver: lts-14.7
