@@ -17,6 +17,10 @@ library
   ghc-options: -Wall -fno-warn-unticked-promoted-constructors -fno-warn-type-defaults
 
   exposed-modules: ZeroSet.Main
+                   ZeroSet.Trace
+                   ZeroSet.AlternatingPath
+                   ZeroSet.Ipe
+
   hs-source-dirs:      src
 
   build-depends:

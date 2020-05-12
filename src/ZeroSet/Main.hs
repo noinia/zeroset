@@ -10,7 +10,7 @@ import Data.Geometry.Box
 import Data.Geometry.Ellipse (ellipseToCircle)
 import Data.Geometry.Ipe
 import Data.Geometry.PolyLine
-import Data.Geometry.ZeroSet
+import ZeroSet.Trace
 import Data.Maybe (mapMaybe)
 import Data.RealNumber.Rational
 import Data.Util
