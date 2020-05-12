@@ -5,6 +5,7 @@ import Control.Lens
 import Data.Data
 import Data.Ext
 import Data.Geometry.Ball
+import Data.Geometry.Point
 import Data.Geometry.Box
 import Data.Geometry.Ellipse (ellipseToCircle)
 import Data.Geometry.Ipe
@@ -48,13 +49,25 @@ mainWith (Options inFile outFile) = readSinglePageFile inFile >>= \case
 
 
 
+-- data Geoms  = Polies (Two (PolyLine 2 () R))
+--             | Disks  (Two (Disk () R))
+--             deriving (Show,Eq)
 
-data Geoms  = Polies (Two (PolyLine 2 () R))
-            | Disks  (Two (Disk () R))
-            deriving (Show,Eq)
-
-data ReadInput = ReadInput Geoms (Rectangle () R)
+data ReadInput = ReadInput (Two (Point 2 R :+ Double)) (Rectangle () R)
                deriving (Show,Eq)
+
+-- traceBisector'         :: ( RealFrac r, Ord r
+--                          , ToWeightedPoint g Double, ToWeightedPoint h Double
+--                          , NumType g ~ r, NumType h ~ r
+--                          , IpeWriteText r, Show r
+--                          )
+--                       => ZeroConfig r
+--                       -> g -> h
+--                       -> Rectangle c r
+--                       -> Maybe (PolyLine 2 () r)
+-- traceBisector' cfg g h = traceBisector' cfg (toWeightedPoint g) (toWeightedPoint h)
+
+
 
 
 -- type
@@ -67,34 +80,26 @@ readInput page = (\ps r -> ReadInput ps r) <$> geoms <*> rect
                [rect'] -> Right rect'
                _       -> Left "no rectangle"
 
-    geoms = (Polies <$> readPolylines page) <|> (Disks <$> readDisks page)
+    geoms = case    (toWeightedPoint <$> readPoints page)
+                 <> (toWeightedPoint <$> readPolylines page)
+                 <> (toWeightedPoint <$> readDisks page)
+            of
+              [p,q] -> Right (Two p q)
+              _     -> Left "Expects exactly 2 geometric objects. Supported are (points, disks, and polylines)"
 
 
-readAll' :: (HasDefaultFromIpe g, r ~ NumType g)
-         => IpePage r -> [g :+ IpeAttributes (DefaultFromIpe g) r]
-readAll' = readAll . Identity
+readPoints :: IpePage R -> [Point 2 R]
+readPoints = map (^.core) . readAll
 
-readPolylines      :: IpePage R -> Either String (Two (PolyLine 2 () R))
-readPolylines page = case map (^.core) $ readAll' page of
-                       [p1,p2] -> Right $ Two p1 p2
-                       pls     -> Left $ "no 2 polylines " <> show pls
+readPolylines :: IpePage R -> [PolyLine 2 () R]
+readPolylines = map (^.core) . readAll
 
-readDisks      :: IpePage R -> Either String (Two (Disk () R))
-readDisks page =  case mapMaybe (ellipseToDisk) . map (^.core) $ readAll' page of
-                      [c1,c2] -> Right $ Two c1 c2
-                      pls     -> Left $ "no 2 disks " <> show pls
+readDisks :: IpePage R -> [Disk () R]
+readDisks = mapMaybe (ellipseToDisk) . map (^.core) . readAll
   where
     ellipseToDisk = fmap (view $ from _DiskCircle) . ellipseToCircle
 
--- newtype IOE e a = IOE { runIOE :: IO (Either e a) }
 
--- instance Monad (IOE e) where
---   (IOE m) >>= k = IOE $ do e <- m
---                            case e of
---                              Left err -> pure $ Left err
---                              Right a  -> runIOE $ k a
-
--- runPage' :: IpePage r -> FilePath -> IO (Either e ())
 
 
 runPage         :: IpePage R -> FilePath -> IO ()
@@ -102,10 +107,9 @@ runPage page fp = case res of
                     Left e   -> print e
                     Right pl -> writeIpeFile fp $ singlePageFromContent [iO $ defIO pl]
   where
-    res = do (ReadInput gs rect) <- readInput page
-             withError "tracing failed" $ case gs of
-               Polies (Two p1 p2) -> traceFromPrefix    defaultZeroConfig p1 p2 rect
-               Disks  (Two d1 d2) -> traceBisectorDisks defaultZeroConfig d1 d2 rect
+    res = do (ReadInput gs rect') <- readInput page
+             let Two p q = gs
+             withError "tracing failed" $ traceBisector defaultZeroConfig q p rect'
 
 
 withError   :: e -> Maybe a -> Either e a
