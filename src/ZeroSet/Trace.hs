@@ -6,40 +6,32 @@ import           Algorithms.BinarySearch
 import           Control.Lens (makeLenses, (^.), (%~), (.~), (&), (^?!), ix, to)
 import           Data.Bifunctor
 import           Data.Ext
-import           Data.Geometry.Box
-import           Data.Geometry.Directions
-import           Data.Geometry.LineSegment
-import           Data.Geometry.Point
-import           Data.Geometry.PolyLine (PolyLine)
-import qualified Data.Geometry.PolyLine as PolyLine
-import           Data.Geometry.Properties
-import           Data.Geometry.QuadTree
-import           Data.Geometry.QuadTree.Cell
-import           Data.Geometry.QuadTree.Split
-import qualified Data.Geometry.QuadTree.Tree as Tree
 import qualified Data.LSeq as LSeq
 import qualified Data.List as List
-import qualified Data.List.Alternating as Alternating
 import           Data.List.Alternating (Alternating(..))
+import qualified Data.List.Alternating as Alternating
 import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Maybe (maybeToList)
-import           Data.Sequence (Seq)
-import qualified Data.Sequence as Seq
 import qualified Data.Tree as RoseTree
 import           Data.Util
-import           ZeroSet.AlternatingPath
-
-import           Data.Geometry.Ball
--- import           Debug.Trace
 import qualified Debug.Trace as Debug
-
-
-
-import           Data.Geometry.QuadTree.Draw
-import           Data.Geometry.Ipe
-import           ZeroSet.Ipe
-import           Data.RealNumber.Rational
+import           Geometry.Ball
+import           Geometry.Box
+import           Geometry.Directions
+import           Geometry.LineSegment
+import           Geometry.Point
+import           Geometry.PolyLine (PolyLine)
+import qualified Geometry.PolyLine as PolyLine
+import           Geometry.Properties
+import           Geometry.QuadTree
+import           Geometry.QuadTree.Cell
+import           Geometry.QuadTree.Draw
+import           Geometry.QuadTree.Split
+import qualified Geometry.QuadTree.Tree as Tree
+import           Ipe
 import           System.IO.Unsafe (unsafePerformIO)
+import           ZeroSet.AlternatingPath
+import           ZeroSet.Ipe
 
 --------------------------------------------------------------------------------
 
@@ -226,7 +218,7 @@ explorePathWith          :: (Ord r, Fractional r, Show r, Show p)
 explorePathWith p start' = toPath . exploreWith p start'
   where
     -- toPath (Root s chs) = Alternating s $ onFirstChild toPath' chs
-    toPath (Root s chs) = case (Alternating s . toPath') <$> chs of
+    toPath (Root s chs) = case Alternating s . toPath' <$> chs of
         []         -> Alternating s []
         [p']       -> p'
         (c1:c2:_)  -> let Alternating t ys  = second oppositeDirection $ Alternating.reverse c1
@@ -250,7 +242,7 @@ withCorners (Alternating v xs) = Alternating v $ map f xs
     f (d :+ z@(ss :+ c)) = s :+ z
       where
         d' = oppositeDirection d
-        s' = (cellSides c)^?!ix d'
+        s' = cellSides c ^?!ix d'
         s  = case ss of
                Left cs -> let Two a b = cornersInDirection d' cs
                           in s'&endPoints.extra .~ a
@@ -264,18 +256,18 @@ withEdges             :: Fractional r
                       -> Alternating (v :+ Cell r) (LineSegment 2 v r)
 withEdges (Alternating s xs) = Alternating s $ map (\x -> x&core .~ f x) xs
   where
-    f (d :+ (v :+ c)) = let e = (cellSides c)^?!ix (oppositeDirection d)
+    f (d :+ (v :+ c)) = let e = cellSides c ^?!ix (oppositeDirection d)
                         in first (const v) e -- store v's in the asociated data
 
 
 
 
 -- | Turns a path into a polyline
-toPolyLineWith            :: Fractional r
-                          => (LineSegment 2 p r -> Point 2 r)
-                          -> FromTo (Point 2 r) (LineSegment 2 p r)
-                          -> Maybe (PolyLine 2 () r)
-toPolyLineWith findZero p = PolyLine.fromPoints . map ext . ptsOf $ p
+toPolyLineWith          :: Fractional r
+                        => (LineSegment 2 p r -> Point 2 r)
+                        -> FromTo (Point 2 r) (LineSegment 2 p r)
+                        -> Maybe (PolyLine 2 () r)
+toPolyLineWith findZero = PolyLine.fromPoints . map ext . ptsOf
   where
     ptsOf = concat' . second findZero
     concat' = \case
@@ -304,7 +296,7 @@ tr s x = Debug.traceShow (s,x) x
 trX b qt = unsafePerformIO $
         do
           writeIpeFile "/tmp/debug.ipe" . singlePageFromContent $
-            [ iO $ drawQuadTreeWith (drawZeroCell) qt
+            [ iO $ drawQuadTreeWith drawZeroCell qt
             , iO $ defIO b
             ]
           pure qt

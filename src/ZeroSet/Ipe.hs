@@ -1,27 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant lambda" #-}
 module ZeroSet.Ipe where
 
 import           Control.Lens
 import           Data.Ext
 import           Data.Foldable
-import           Data.Geometry.Box
--- import qualified Data.Geometry.CatmulRomSpline as CatmulRom
-import           Data.Geometry.Ipe.Attributes
-import           Data.Geometry.Ipe.Color
-import           Data.Geometry.Ball
-import           Data.Geometry.Ipe.IpeOut
-import qualified Data.Geometry.Ipe.Types as Ipe
-import           Data.Geometry.Ipe.Types (singlePageFromContent)
-import           Data.Geometry.Point
-import           Data.Geometry.LineSegment
-import           Data.Geometry.QuadTree
-import           Data.Geometry.QuadTree.Cell
-import           Data.Geometry.QuadTree.Draw
-import           Data.Geometry.QuadTree.Split
+import           Geometry.Box
+-- import qualified Geometry.CatmulRomSpline as CatmulRom
+import           Ipe.Attributes
+import           Ipe.Color
+import           Geometry.Ball
+import           Ipe.IpeOut
+import qualified Ipe.Types as Ipe
+import           Geometry.Point
+import           Geometry.QuadTree
+import           Geometry.QuadTree.Cell
+import           Geometry.QuadTree.Draw
 import           Data.RealNumber.Rational
 import           Data.Tree.Util (TreeNode(..), _TreeNodeEither)
-import           Data.Geometry.Ipe.Writer
-
 
 --------------------------------------------------------------------------------
 
@@ -55,7 +52,7 @@ toColor = \case
   Negative -> red
 
 
-drawZeroCell            :: Fractional r => IpeOut (Either (Corners Sign) Sign :+ Cell r) Ipe.Group r
+drawZeroCell :: Fractional r => IpeOut (Either (Corners Sign) Sign :+ Cell r) Ipe.Group r
 drawZeroCell = \z -> ipeGroup [ iO $ drawZeroCell' z, iO $ drawCorners z]
 
 --------------------------------------------------------------------------------

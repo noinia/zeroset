@@ -28,10 +28,9 @@ library
                      , bifunctors       >= 4.1
                      , containers       >= 0.5.5
                      , lens             >= 4.2
-
-                     , hgeometry-combinatorial >= 0.10.0.0
-                     , hgeometry               >= 0.10.0.0
-                     , hgeometry-ipe           >= 0.10.0.0
+                     , hgeometry-combinatorial >= 0.15
+                     , hgeometry               >= 0.15
+                     , hgeometry-ipe           >= 0.14
                      , optparse-applicative    >= 0.13.0.0
 
 
@@ -47,27 +46,22 @@ library
                     , TypeApplications
                     , ScopedTypeVariables
 
-
                     , PatternSynonyms
                     , ViewPatterns
                     , LambdaCase
                     , TupleSections
-
 
                     , StandaloneDeriving
                     , GeneralizedNewtypeDeriving
                     , DeriveFunctor
                     , DeriveFoldable
                     , DeriveTraversable
-
-                    , AutoDeriveTypeable
+                    , DeriveDataTypeable
 
                     , FlexibleInstances
                     , FlexibleContexts
                     , MultiParamTypeClasses
                     , OverloadedStrings
-
-
 
 executable zeroset
   hs-source-dirs:      app

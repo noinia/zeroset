@@ -1,20 +1,19 @@
 module ZeroSet.Main where
 
-import Data.Geometry.Properties
 import Control.Lens
 import Data.Data
 import Data.Ext
-import Data.Geometry.Ball
-import Data.Geometry.Point
-import Data.Geometry.Box
-import Data.Geometry.Ellipse (ellipseToCircle)
-import Data.Geometry.Ipe
-import Data.Geometry.PolyLine
-import ZeroSet.Trace
 import Data.Maybe (mapMaybe)
 import Data.RealNumber.Rational
 import Data.Util
+import Geometry.Ball
+import Geometry.Box
+import Geometry.Ellipse (ellipseToCircle)
+import Geometry.Point
+import Geometry.PolyLine
+import Ipe
 import Options.Applicative
+import ZeroSet.Trace
 
 -- import Debug.Trace
 --------------------------------------------------------------------------------
@@ -42,9 +41,10 @@ options = info (helper <*> parser)
                         )
 
 
-mainWith (Options inFile outFile) = readSinglePageFile inFile >>= \case
+mainWith :: Options -> IO ()
+mainWith (Options inFile' outFile') = readSinglePageFile inFile' >>= \case
     Left err -> print err
-    Right p  -> runPage p outFile
+    Right p  -> runPage p outFile'
 
 
 
@@ -74,11 +74,11 @@ data ReadInput = ReadInput (Two (Point 2 R :+ Double)) (Rectangle () R)
 
 -- readInput page | traceShow page False = undefined
 readInput      :: IpePage R -> Either String ReadInput
-readInput page = (\ps r -> ReadInput ps r) <$> geoms <*> rect
+readInput page = ReadInput <$> geoms <*> rect'
   where
-    rect   = case page^..content.traverse._IpePath.core._asRectangle of
-               [rect'] -> Right rect'
-               _       -> Left "no rectangle"
+    rect'  = case page^..content.traverse._IpePath.core._asRectangle of
+               [rect''] -> Right rect''
+               _        -> Left "no rectangle"
 
     geoms = case    (toWeightedPoint <$> readPoints page)
                  <> (toWeightedPoint <$> readPolylines page)
@@ -95,7 +95,7 @@ readPolylines :: IpePage R -> [PolyLine 2 () R]
 readPolylines = map (^.core) . readAll
 
 readDisks :: IpePage R -> [Disk () R]
-readDisks = mapMaybe (ellipseToDisk) . map (^.core) . readAll
+readDisks = mapMaybe (ellipseToDisk . (^.core)) . readAll
   where
     ellipseToDisk = fmap (view $ from _DiskCircle) . ellipseToCircle
 
